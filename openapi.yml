@@ -81,7 +81,7 @@ paths:
       summary: Consulta um ticket
       description: >
         Retorna as informações de um ticket a partir do hash.
-        Caso já exista validação, os campos stamp_validacao e valor serão retornados.
+        Caso já exista validação (liberação do ticket), os campos stamp_validacao e valor serão retornados.
       parameters:
         - name: hash
           in: path
