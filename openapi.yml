@@ -1,0 +1,305 @@
+openapi: 3.0.3
+
+info:
+  title: API de integração Mindguard-Cancelas e Postogestor
+  version: "1.0.0"
+  description: >
+    REST API para habilitar a comunicação entre Mindguard-Cancelas e Postogestor (PDV).
+    Todas as transações são autenticadas utilizando Bearer Token.
+    O hash do ticket é gerado pelo Mindguard-Cancelas e sempre retornado em maiúsculo.
+    Todos os timestamps utilizam o formato YYYYMMDDHHIISS.
+
+tags:
+  - name: Mindguard-to-Postogestor
+    description: Endpoints consumidos pelo Postogestor.
+
+  - name: Postogestor-to-Mindguard
+    description: Endpoints consumidos pelo Mindguard-Cancelas.
+
+servers:
+  - url: https://api.postogestor.com
+    description: API Postogestor
+
+  - url: https://api.mindguard.com
+    description: API Mindguard
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  /tickets:
+    post:
+      tags:
+        - Mindguard-to-Postogestor
+      servers:
+        - url: https://api.postogestor.com
+      summary: Registra um ticket no Postogestor
+      description: >
+        Registra placa, totem e hash do ticket no Postogestor.
+        O hash contém 32 caracteres no formato:
+        [11 CARACTERES + PLACA + TIMESTAMP_ENTRADA(YYYYMMDDHHIISS)].
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hash
+                - placa
+                - totem
+              properties:
+                hash:
+                  type: string
+                  maxLength: 32
+                  example: "610e80706aaABC123420251126131059"
+                placa:
+                  type: string
+                  maxLength: 7
+                  example: "ABC1234"
+                totem:
+                  type: string
+                  maxLength: 32
+                  example: "ENTRADA-01"
+      responses:
+        "201":
+          description: Created.
+        "400":
+          description: Bad Request.
+        "401":
+          description: Authentication is missing or invalid.
+        "500":
+          description: Internal server error.
+
+  /ticket/{hash}:
+    get:
+      tags:
+        - Mindguard-to-Postogestor
+      servers:
+        - url: https://api.postogestor.com
+      summary: Consulta um ticket
+      description: >
+        Retorna as informações de um ticket a partir do hash.
+        Caso já exista validação, os campos stamp_validacao e valor serão retornados.
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hash:
+                    type: string
+                  placa:
+                    type: string
+                    nullable: true
+                  totem:
+                    type: string
+                    nullable: true
+                  stamp_validacao:
+                    type: string
+                    nullable: true
+                    description: Timestamp de validação (YYYYMMDDHHIISS).
+                  valor:
+                    type: number
+                    format: float
+                    nullable: true
+        "404":
+          description: Ticket not found.
+        "401":
+          description: Authentication is missing or invalid.
+        "500":
+          description: Internal server error.
+
+  /tickets/{hash}:
+    patch:
+      tags:
+        - Postogestor-to-Mindguard
+      servers:
+        - url: https://api.postogestor.com
+      summary: Retorna a validação de um ticket após pagamento
+      description: >
+        Informa ao Mindguard-Cancelas que um ticket foi validado no PDV.
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - valor
+                - stamp_validacao
+              properties:
+                valor:
+                  type: number
+                  format: float
+                  example: 18.50
+                stamp_validacao:
+                  type: string
+                  example: "20251126131059"
+      responses:
+        "200":
+          description: OK.
+        "400":
+          description: Invalid payload.
+        "404":
+          description: Ticket not found.
+        "401":
+          description: Authentication is missing or invalid.
+        "500":
+          description: Internal server error.
+
+  /tickets/{hash}/placa:
+    patch:
+      tags:
+        - Postogestor-to-Mindguard
+      servers:
+        - url: https://api.mindguard.com
+      summary: Atualiza a placa de um ticket
+      description: >
+        Permite ao Postogestor atualizar a placa de um ticket no Mindguard-Cancelas.
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - placa
+              properties:
+                placa:
+                  type: string
+                  maxLength: 7
+                  example: "ABC1234"
+      responses:
+        "200":
+          description: Updated successfully.
+        "404":
+          description: Ticket not found.
+        "401":
+          description: Authentication is missing or invalid.
+        "500":
+          description: Internal server error.
+
+  /tickets/create:
+    post:
+      tags:
+        - Postogestor-to-Mindguard
+      servers:
+        - url: https://api.mindguard.com
+      summary: Cria um ticket no Mindguard-Cancelas
+      description: >
+        Cria um novo ticket no Mindguard-Cancelas.
+        O hash é gerado internamente e retornado na resposta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - entrada
+                - placa
+              properties:
+                entrada:
+                  type: string
+                  description: Timestamp de entrada (YYYYMMDDHHIISS).
+                  example: "20251126131059"
+                placa:
+                  type: string
+                  maxLength: 7
+                  example: "ABC1234"
+      responses:
+        "201":
+          description: Ticket criado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hash:
+                    type: string
+                    example: "610e80706aaABC123420251126131059"
+        "400":
+          description: Invalid payload.
+        "401":
+          description: Authentication is missing or invalid.
+        "500":
+          description: Internal server error.
+
+  /venda_direta:
+    post:
+      tags:
+        - Mindguard-to-Postogestor
+      servers:
+        - url: https://api.postogestor.com
+      summary: Registra uma venda direta no Postogestor
+      description: >
+        Permite ao Mindguard-Cancelas registrar uma venda direta no Postogestor,
+        associada a um ticket.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hash
+                - timestamp
+                - valor
+              properties:
+                hash:
+                  type: string
+                  maxLength: 32
+                  description: Hash do ticket associado à venda.
+                  example: "610e80706aaABC123420251126131059"
+                timestamp:
+                  type: string
+                  description: Timestamp da venda (YYYYMMDDHHIISS).
+                  example: "20251126132510"
+                valor:
+                  type: number
+                  format: float
+                  description: Valor da venda (decimal 8,2).
+                  example: 25.90
+      responses:
+        "201":
+          description: Venda registrada com sucesso.
+        "400":
+          description: Invalid payload.
+        "401":
+          description: Authentication is missing or invalid.
+        "404":
+          description: Ticket not found.
+        "500":
+          description: Internal server error.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
