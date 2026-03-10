@@ -1,24 +1,12 @@
 <!DOCTYPE html>
 
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>API Documentation</title>
+<meta charset="UTF-8">
+<title>API Docs</title>
 
-  <!-- Swagger UI CSS -->
-
-  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
-
-  <style>
-    body {
-      margin: 0;
-      background: #fafafa;
-    }
-    #swagger-ui {
-      max-width: 1200px;
-      margin: auto;
-    }
-  </style>
+<link rel="stylesheet"
+href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
 
 </head>
 
@@ -26,28 +14,14 @@
 
 <div id="swagger-ui"></div>
 
-<!-- Swagger UI scripts -->
-
-<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-
-<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 
 <script>
-window.onload = () => {
-  const ui = SwaggerUIBundle({
-    url: "./openapi.yml", 
-    dom_id: "#swagger-ui",
-
-    deepLinking: true,
-    presets: [
-      SwaggerUIBundle.presets.apis,
-      SwaggerUIStandalonePreset
-    ],
-
-    layout: "StandaloneLayout"
+window.onload = function () {
+  SwaggerUIBundle({
+    url: "openapi.yml",
+    dom_id: "#swagger-ui"
   });
-
-  window.ui = ui;
 };
 </script>
 
