@@ -1,22 +1,22 @@
 openapi: 3.0.3
 
 info:
-  title: API de integração Postogestor e Mindguard - Posto Mahle
+  title: API de integração Postogestor e Autoguard - Posto Mahle
   version: "1.0.1"
   description: |
-    REST API para integração **Postogestor e Mindguard** - Posto Mahle Campina Grande - PR.
+    REST API para integração **Postogestor e Autoguard** - Posto Mahle Campina Grande - PR.
 
     Todas as transações são autenticadas utilizando **Bearer Token** (Gerado via Laravel Sanctum/Passport).
 
     ### Regras de Negócio:
-    *   **Hash do Ticket:** É o identificador único (32 dígitos) gerado no Mindguard. Deve ser tratado em **UPPERCASE**.
+    *   **Hash do Ticket:** É o identificador único (32 dígitos) gerado no Autoguard. Deve ser tratado em **UPPERCASE**.
     *   **Formato do Hash:** `MD5{11}|PLACA{7}|YYYY{4}|MM{2}|DD{2}|II{2}|MM{2}|SS{2}`.
     *   **Timestamps:** Seguem o padrão `YYYYMMDDHHIISS`.
     *   **Liberação de Saída:** O ticket é considerado liberado apenas quando `valor_pago` for **diferente de null** (aceita-se `0.00`).
 
 servers:
   - url: https://172.20.25.46
-    description: Servidor de Produção Mindguard
+    description: Servidor de Produção Autoguard (a ser ativado)
 
 security:
   - BearerAuth: []
@@ -25,7 +25,7 @@ paths:
   /tickets:
     post:
       summary: Registra um novo ticket
-      description: Realiza a abertura de um ticket no sistema Mindguard.
+      description: Realiza a abertura de um ticket no sistema Autoguard.
       requestBody:
         required: true
         content:
